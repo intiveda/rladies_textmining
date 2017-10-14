@@ -13,6 +13,7 @@ output:
 
 RLadies y Data Scientists en **Kernel Analytics** 
 
+Código y datos en https://github.com/intiveda/rladies_textmining 
 
 ## Text Mining
 
@@ -69,7 +70,6 @@ Muchas de estas funciones tienne su equivalente en R base, pueden ser más lentas
 
 ```{r temas}
 temas <- c("Código", "Mujeres", "tecnología", "Informática", "estadística", "Women", "Coders", "Aprendizaje", "automático", "Análisis", "datos", "Visualización", "R-Ladies", "Social", "Coding", "R", "Ciencia", "Programming")
-temas
 ```
 ```{r mayus}
 str_to_upper(temas)
@@ -91,11 +91,8 @@ print(str_length(NA))
 
 + `str_sub(string, start, end)`: subsetea un string o un vector de string especificando la posición inicial y la final, es el equivalente en R base a substr(). Por defecto finaliza en el último caracter.
 
-```{r subsetting1}
-temas[1:4]
-```
-
 ```{r subsetting2}
+print(temas[1:4])
 str_sub(string = temas[1:4], start=3)
 ```
 + `str_dup(string, times)`: copia y pega un string un número determinado de veces
@@ -162,7 +159,8 @@ str_replace_all(c("castanya", "otonyo", "veronyo", "anyo", "nyonyo"), pattern = 
 + `str_split(string, pattern)`: separa una cadena en un vector, `str_split_fixed(string, pattern, n)` lo hace en un número `n` determinado de elementos
 
 ```{r regex9}
-str_split("Eres muy chu chu chuli",pattern = " ")
+print(str_split("Eres muy chu chu chuli",pattern = " "))
+print(length(str_split("Eres muy chu chu chuli",pattern = " ")[[1]]))
 ```
 
 ## Analizando texto con R: los Simpsons fuente de sabiduría
@@ -170,14 +168,15 @@ str_split("Eres muy chu chu chuli",pattern = " ")
 ```{r subtools, message=TRUE, warning=FALSE}
 # devtools::install_github("fkeck/subtools")
 library(subtools)
-a <- read.subtitles.serie(dir = "C:/Users/claudia.guirao/Documents/rladies/subs/The Simpsons/")
+a <- read.subtitles.serie(dir = "C:/Users/ClaudiaG/Documents/rladies/rladies_repo/rladies_textmining/The Simpsons/")
 df <- subDataFrame(a)
+df <- df[complete.cases(df), ]
 str(df)
 ```
 
 
 
-```{r, , message=TRUE, warning=FALSE}
+```{r, , message=FALSE, warning=FALSE}
 library(tm)
 c <- tmCorpus(a)
 c <- tm_map(c, content_transformer(tolower))
@@ -188,11 +187,12 @@ c <- tm_map(c, stripWhitespace)
 ```
 
 ```{r, , message=TRUE, warning=FALSE}
+library(data.table)
 TDM <- TermDocumentMatrix(c)
 TDM <- as.matrix(TDM)
-vec.season <- rep(1:2, each = 5)
+vec.season <- c(rep(x = 1,13), rep(2, 22), rep(3,24), rep(4,22), rep(5,24), rep(6,25)) #episodios por temp
 TDM.season <- t(apply(TDM, 1, function(x) tapply(x, vec.season, sum)))
-colnames(TDM.season) <- paste("S", 1:2)
+colnames(TDM.season) <- paste("S", unique(vec.season))
 ```
 
 ```{r, , message=TRUE, warning=FALSE}
@@ -203,9 +203,10 @@ comparison.cloud(TDM.season, title.size = 1, max.words = 100, random.order = T)
 ```
 
 
-```{r, , message=TRUE, warning=FALSE}
+```{r, , message=FALSE, warning=FALSE}
 library(tidytext)
 library(tidyverse)
+
 data(stop_words)
 
 tidy_df <- df %>%
@@ -218,7 +219,7 @@ library(ggplot2)
 
 tidy_df %>% group_by(season) %>%
         count(word, sort = TRUE) %>%
-        top_n(10) %>%
+        top_n(15) %>%
         ggplot(aes(reorder(word,n), n, fill = season)) +
         geom_col() +
         coord_flip() +
@@ -240,14 +241,13 @@ bigram_graph <- df %>%
   group_by(season) %>%
   count(word1, word2, sort = TRUE) %>%
   select(word1, word2, season, n) %>%
-  filter(n > 2) %>%
+  filter(n > 7) %>%
   graph_from_data_frame()
 
 # str(bigram_graph)
 ```
 
 ```{r, message=TRUE, warning=FALSE}
-
 library(ggraph)
 set.seed(2017)
 
@@ -276,7 +276,6 @@ tf_idf_df <- tf_idf_df[order(-tf_idf_df$tf_idf),]
 ```
 
 ```{r}
-
 tf_idf_df %>% 
   top_n(20) %>%
   ggplot(aes(word, tf_idf, fill = season)) +
@@ -287,7 +286,7 @@ tf_idf_df %>%
 ```{r}
 tf_idf_df %>% 
   group_by(season) %>% 
-  top_n(15) %>% 
+  top_n(10) %>% 
   ungroup %>%
   ggplot(aes(word, tf_idf, fill = season)) +
   geom_col(show.legend = FALSE) +
