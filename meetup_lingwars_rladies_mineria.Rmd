@@ -1,0 +1,298 @@
+---
+title: "R-Ladies + Lingwars: Taller de minería de textos con R"
+subtitle: "R-Ladies Madrid, Verónica García y Claudia Guirao, 17/10/2017"
+
+output: 
+  html_notebook: 
+    toc: yes
+---
+## ¿Quiénes somos?
+
+- **Verónica García**
+- **Claudia Guirao**, @claudiaguirao 
+
+RLadies y Data Scientists en **Kernel Analytics** 
+
+
+## Text Mining
+
+Gran parte de los datos se encuentran no estructurados, es importante conocer técnicas que nos permitan obtener conclusiones a partir de los mensajes que generan nuestras organizaciones, clientes, usuarios o internet en general
+
+## Back2basics: Strings y expresiones regulares
+
+Las cadenas o strings cumplen un papel importante en las tareas de ETL o preparación de los datos. Una de las librerías esenciales en la materia es **string**
+
+String es uno de los paquetes diseñados por Hadley Wickham para asistir en las tareas de manipulación de strings:
+
++ se integra con _pipes_ (%<%)
++ sus funciones son consistentes y fáciles de interpretar
+
+### ¿Qué son las cadenas de texto o _strings_?
+
++ Las cadenas de texto se encuentran contenidas entre comillas `""` (*usar la comilla simple `'` para escapar la doble comilla)
++ Pueden contener letras `"a"`, números `"1"`, simbolos `"&"` o todo lo anterior `"1a&"`
++ Mientras que los números puede ser a la vez _integers_ y _characters_, las letras y los s?mbolos no tienen significado como integer y se traducen en `NA`
+
+```{r as.integer}
+as.integer(c("a", "&", "123"))
+```
+
+```{r list1}
+c(factor("a"), "b", "&",1)
+```
+Concatenar integers y characters, convierte automáticamente los integers en _characters_. 
+
+```{r list2}
+c(as.character(factor("a")), "b", "&",1)
+```
+
+### Operaciones básicas
+
+#### Importar la librería
+```
+install.packages("stringr")
+library(stringr)
+```
+#### Operadores
+Muchas de estas funciones tienne su equivalente en R base, pueden ser más lentas/menos eficientes
+
++ `str_to_upper(string)`: convierte un string en mayúsculas
++ `str_to_lower(string)`: convierte un string en minúsculas
++ `str_to_title(string)`: capitaliza un string
+
+
+```{r temas}
+temas <- c("Código", "Mujeres", "tecnología", "Informática", "estadística", "Women", "Coders", "Aprendizaje", "automático", "Análisis", "datos", "Visualización", "R-Ladies", "Social", "Coding", "R", "Ciencia", "Programming")
+temas
+```
+```{r mayus}
+str_to_upper(temas)
+```
+```{r minus}
+str_to_lower(temas)
+```
+```{r capi}
+str_to_title(temas)
+```
+
++ `str_c(string, sep = "")`: junta varios string en uno solo, es el equivalente a `paste(sep = "")` o `paste0()`
++ `str_length(string)`: devuelve la longitud del string, es similar a la función `nchar()`. Convierte los factores en strings y conserva los NA's
+
+```{r length}
+print(str_length('R-Ladies'))
+print(str_length(NA))
+```
+
++ `str_sub(string, start, end)`: subsetea un string o un vector de string especificando la posición inicial y la final, es el equivalente en R base a substr(). Por defecto finaliza en el último caracter.
+
+```{r subsetting1}
+temas[1:4]
+```
+
+```{r subsetting2}
+str_sub(string = temas[1:4], start=3)
+```
++ `str_dup(string, times)`: copia y pega un string un número determinado de veces
+```{r duplicating}
+str_dup(string = temas[1:4], times = 3)
+```
+
++ `str_trim(string, side = c("both", "left", "rigth"))`: elimina los espacios vacíos, por defecto toma el valor _both_. Mejor evitar `gsub(" ", "", string)` 
+
++ `str_pad(string, width, side = c("left", "both", "right"), pad = " "))`: añade a strings espacios en blanco para igualarlos en longitud, especialmente útil para añadir 0 a números. 
+
+### Expresiones regulares
+
+Las expresiones regulares ( _regular expressions_, _regex_, _pattern matching_) son un lenguaje usado para parsear y manipular texto. Se usan comúnmente para hacer operaciones de búsqueda y reemplazo y para validar si un texto está bien formado. 
+
+##### Expresiones comunes
+
+- "a"  = letra "a"
+- "^a" = empieza con la letra "a"
+- "a$" = finaliza con la letra "a"
+- "[ ]" = contiene cualquier letra (o número) de las contenidas en los corchetes
+- "[ - ]" = contiene cualquier letra (o número) dentro de un rango
+- "[^ae]" = cualquier cosa excepto determinadas letras (o números)
+- "{3}" = repite la expresi?n regular 3 veces
+
+Las expresiones regulares son un mundo en si mismo, aquí tienes una pequeña _chuleta_ : https://www.rstudio.com/wp-content/uploads/2016/09/RegExCheatsheet.pdf 
+
+
+```{r regex}
+rcosas = c("baseR", "R-Ladies", "Rmeetup", "Rmarkdown", "stringR")
+str_detect(rcosas, pattern = "^R")
+```
+```{r regex2}
+rcosas[str_detect(rcosas, pattern = "^R")]
+```
+
+```{r regex3}
+rcosas[str_detect(rcosas, pattern = "R")]
+```
+```{r regex4}
+cleancode <- c("tidyverse", "tidyr","dplyr", "ggplot2", "tidytext", "purrr")
+str_locate(cleancode, "tidy")
+```
+
+##### Otras funciones 
++ `str_extract(string, pattern)` o `str_extract_all()`: busca la palabra exacta (normalmente se utiliza con expresiones regulares concatenadas)
++ `str_match(string, pattern)` o `str_match_all()`: es una función equivalente pero devuelve una matriz
+
+```{r regex5}
+str_match(c("12345678", "12587465", "dni desconocido"), pattern = "[1-9]{8}")
+```
+```{r regex6}
+str_match_all(c("12345678", "12587465", "dni desconocido"), pattern = "[1-9]{8}")
+```
+
+
++ `str_replace(string, pattern, replacement)`: reemplaza la primera instancia, `str_replace_all` para reemplazarlas todas
+```{r regex7}
+str_replace(c("castanya", "otonyo", "veronyo", "anyo", "nyonyo"), pattern = "ny", replacement = "?")
+```
+```{r regex8}
+str_replace_all(c("castanya", "otonyo", "veronyo", "anyo", "nyonyo"), pattern = "ny", replacement = "?")
+```
++ `str_split(string, pattern)`: separa una cadena en un vector, `str_split_fixed(string, pattern, n)` lo hace en un número `n` determinado de elementos
+
+```{r regex9}
+str_split("Eres muy chu chu chuli",pattern = " ")
+```
+
+## Analizando texto con R: los Simpsons fuente de sabiduría
+http://www.pieceofk.fr/?p=437
+https://rstudio-pubs-static.s3.amazonaws.com/180610_d3764c43f1e54692b7e84d21ec94772a.html?utm_content=bufferd9e7e&utm_medium=social&utm_source=twitter.com&utm_campaign=buffer#44 
+http://tamaszilagyi.com/blog/a-tidy-text-analysis-of-rick-and-morty/?utm_content=buffere7d52&utm_medium=social&utm_source=twitter.com&utm_campaign=buffer
+
+```{r subtools}
+# devtools::install_github("fkeck/subtools")
+library(subtools)
+a <- read.subtitles.serie(dir = "C:/Users/claudia.guirao/Documents/rladies/subs/subs/")
+df <- subDataFrame(a)
+str(df)
+```
+
+
+
+```{r}
+library(tm)
+c <- tmCorpus(a)
+c <- tm_map(c, content_transformer(tolower))
+c <- tm_map(c, removePunctuation)
+c <- tm_map(c, removeNumbers)
+c <- tm_map(c, removeWords, stopwords("english"))
+c <- tm_map(c, stripWhitespace)
+```
+
+```{r}
+TDM <- TermDocumentMatrix(c)
+TDM <- as.matrix(TDM)
+vec.season <- rep(1:2, each = 5)
+TDM.season <- t(apply(TDM, 1, function(x) tapply(x, vec.season, sum)))
+colnames(TDM.season) <- paste("S", 1:2)
+```
+
+```{r}
+library(wordcloud)
+set.seed(100)
+comparison.cloud(TDM.season, title.size = 1, max.words = 100, random.order = T)
+
+```
+
+
+```{r}
+
+library(tidytext)
+library(tidyverse)
+data(stop_words)
+
+tidy_df <- df %>%
+  unnest_tokens(word, Text) %>%
+  dplyr::anti_join(stop_words)
+```
+```{r}
+library(dplyr)
+library(ggplot2)
+
+tidy_df %>% group_by(season) %>%
+        count(word, sort = TRUE) %>%
+        top_n(10) %>%
+        ggplot(aes(reorder(word,n), n, fill = season)) +
+        geom_col() +
+        coord_flip() +
+        facet_wrap(~season, scales = "free_y") +
+        labs(x = NULL) +
+        guides(fill = FALSE) +
+        scale_fill_brewer(palette = "Set1")
+```
+```{r}
+library(tidyr)
+
+library(igraph)
+library(tidytext)
+
+bigram_graph <- df %>%
+  unnest_tokens(bigram, Text, token = "ngrams", n = 2) %>%
+  separate(bigram, c("word1", "word2"), sep = " ") %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word) %>% 
+  group_by(season) %>%
+  count(word1, word2, sort = TRUE) %>%
+  select(word1, word2, season, n) %>%
+  filter(n > 2) %>%
+  graph_from_data_frame()
+
+str(bigram_graph)
+```
+```{r}
+
+library(ggraph)
+set.seed(2017)
+
+ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+```
+```{r}
+a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
+
+ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.07, 'inches')) +
+  geom_node_point(color = "lightblue", size = 5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+  theme_void()
+```
+
+```{r}
+library(dplyr)
+tf_idf_df <- tidy_df %>% 
+        count(season, word, sort = TRUE) %>%
+        bind_tf_idf(word, season, n)
+tf_idf_df <- tf_idf_df[order(-tf_idf_df$tf_idf),] 
+```
+
+```{r}
+
+tf_idf_df %>% 
+  top_n(20) %>%
+  ggplot(aes(word, tf_idf, fill = season)) +
+  geom_col() +
+  labs(x = NULL, y = "tf-idf") +
+  coord_flip()
+```
+```{r}
+tf_idf_df %>% 
+  group_by(season) %>% 
+  top_n(15) %>% 
+  ungroup %>%
+  ggplot(aes(word, tf_idf, fill = season)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "tf-idf") +
+  facet_wrap(~season, ncol = 2, scales = "free") +
+  coord_flip()
+```
+
+
+
