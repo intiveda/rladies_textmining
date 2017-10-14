@@ -8,7 +8,7 @@ output:
 ---
 ## ¿Quiénes somos?
 
-- **Verónica García**
+- **Verónica García**, @yryaa 
 - **Claudia Guirao**, @claudiaguirao 
 
 RLadies y Data Scientists en **Kernel Analytics** 
@@ -17,6 +17,11 @@ RLadies y Data Scientists en **Kernel Analytics**
 ## Text Mining
 
 Gran parte de los datos se encuentran no estructurados, es importante conocer técnicas que nos permitan obtener conclusiones a partir de los mensajes que generan nuestras organizaciones, clientes, usuarios o internet en general
+
+## Materiales y librerías 
+
+- Subtítulos temporadas de los Simpsons
+- Librerías: ```tm, tidytext, tidyverse, dplyr, datatable, ggplot, igraph, ggraph, worldcloud```
 
 ## Back2basics: Strings y expresiones regulares
 
@@ -33,7 +38,7 @@ String es uno de los paquetes diseñados por Hadley Wickham para asistir en las t
 + Pueden contener letras `"a"`, números `"1"`, simbolos `"&"` o todo lo anterior `"1a&"`
 + Mientras que los números puede ser a la vez _integers_ y _characters_, las letras y los s?mbolos no tienen significado como integer y se traducen en `NA`
 
-```{r as.integer}
+```{r as.integer, warning=FALSE}
 as.integer(c("a", "&", "123"))
 ```
 
@@ -49,11 +54,12 @@ c(as.character(factor("a")), "b", "&",1)
 ### Operaciones básicas
 
 #### Importar la librería
-```
-install.packages("stringr")
+```{r}
+# install.packages("stringr")
 library(stringr)
 ```
 #### Operadores
+
 Muchas de estas funciones tienne su equivalente en R base, pueden ser más lentas/menos eficientes
 
 + `str_to_upper(string)`: convierte un string en mayúsculas
@@ -113,7 +119,7 @@ Las expresiones regulares ( _regular expressions_, _regex_, _pattern matching_) 
 - "[ ]" = contiene cualquier letra (o número) de las contenidas en los corchetes
 - "[ - ]" = contiene cualquier letra (o número) dentro de un rango
 - "[^ae]" = cualquier cosa excepto determinadas letras (o números)
-- "{3}" = repite la expresi?n regular 3 veces
+- "{3}" = repite la expresión regular 3 veces
 
 Las expresiones regulares son un mundo en si mismo, aquí tienes una pequeña _chuleta_ : https://www.rstudio.com/wp-content/uploads/2016/09/RegExCheatsheet.pdf 
 
@@ -148,10 +154,10 @@ str_match_all(c("12345678", "12587465", "dni desconocido"), pattern = "[1-9]{8}"
 
 + `str_replace(string, pattern, replacement)`: reemplaza la primera instancia, `str_replace_all` para reemplazarlas todas
 ```{r regex7}
-str_replace(c("castanya", "otonyo", "veronyo", "anyo", "nyonyo"), pattern = "ny", replacement = "?")
+str_replace(c("castanya", "otonyo", "veronyo", "anyo", "nyonyo"), pattern = "ny", replacement = "ñ")
 ```
 ```{r regex8}
-str_replace_all(c("castanya", "otonyo", "veronyo", "anyo", "nyonyo"), pattern = "ny", replacement = "?")
+str_replace_all(c("castanya", "otonyo", "veronyo", "anyo", "nyonyo"), pattern = "ny", replacement = "ñ")
 ```
 + `str_split(string, pattern)`: separa una cadena en un vector, `str_split_fixed(string, pattern, n)` lo hace en un número `n` determinado de elementos
 
@@ -160,21 +166,18 @@ str_split("Eres muy chu chu chuli",pattern = " ")
 ```
 
 ## Analizando texto con R: los Simpsons fuente de sabiduría
-http://www.pieceofk.fr/?p=437
-https://rstudio-pubs-static.s3.amazonaws.com/180610_d3764c43f1e54692b7e84d21ec94772a.html?utm_content=bufferd9e7e&utm_medium=social&utm_source=twitter.com&utm_campaign=buffer#44 
-http://tamaszilagyi.com/blog/a-tidy-text-analysis-of-rick-and-morty/?utm_content=buffere7d52&utm_medium=social&utm_source=twitter.com&utm_campaign=buffer
 
-```{r subtools}
+```{r subtools, message=TRUE, warning=FALSE}
 # devtools::install_github("fkeck/subtools")
 library(subtools)
-a <- read.subtitles.serie(dir = "C:/Users/claudia.guirao/Documents/rladies/subs/subs/")
+a <- read.subtitles.serie(dir = "C:/Users/claudia.guirao/Documents/rladies/subs/The Simpsons/")
 df <- subDataFrame(a)
 str(df)
 ```
 
 
 
-```{r}
+```{r, , message=TRUE, warning=FALSE}
 library(tm)
 c <- tmCorpus(a)
 c <- tm_map(c, content_transformer(tolower))
@@ -184,7 +187,7 @@ c <- tm_map(c, removeWords, stopwords("english"))
 c <- tm_map(c, stripWhitespace)
 ```
 
-```{r}
+```{r, , message=TRUE, warning=FALSE}
 TDM <- TermDocumentMatrix(c)
 TDM <- as.matrix(TDM)
 vec.season <- rep(1:2, each = 5)
@@ -192,7 +195,7 @@ TDM.season <- t(apply(TDM, 1, function(x) tapply(x, vec.season, sum)))
 colnames(TDM.season) <- paste("S", 1:2)
 ```
 
-```{r}
+```{r, , message=TRUE, warning=FALSE}
 library(wordcloud)
 set.seed(100)
 comparison.cloud(TDM.season, title.size = 1, max.words = 100, random.order = T)
@@ -200,8 +203,7 @@ comparison.cloud(TDM.season, title.size = 1, max.words = 100, random.order = T)
 ```
 
 
-```{r}
-
+```{r, , message=TRUE, warning=FALSE}
 library(tidytext)
 library(tidyverse)
 data(stop_words)
@@ -210,7 +212,7 @@ tidy_df <- df %>%
   unnest_tokens(word, Text) %>%
   dplyr::anti_join(stop_words)
 ```
-```{r}
+```{r, , message=TRUE, warning=FALSE}
 library(dplyr)
 library(ggplot2)
 
@@ -225,9 +227,8 @@ tidy_df %>% group_by(season) %>%
         guides(fill = FALSE) +
         scale_fill_brewer(palette = "Set1")
 ```
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(tidyr)
-
 library(igraph)
 library(tidytext)
 
@@ -242,9 +243,10 @@ bigram_graph <- df %>%
   filter(n > 2) %>%
   graph_from_data_frame()
 
-str(bigram_graph)
+# str(bigram_graph)
 ```
-```{r}
+
+```{r, message=TRUE, warning=FALSE}
 
 library(ggraph)
 set.seed(2017)
@@ -296,3 +298,7 @@ tf_idf_df %>%
 
 
 
+## Anexos y otra információn útil
++ http://www.pieceofk.fr/?p=437
++ https://rstudio-pubs-static.s3.amazonaws.com/180610_d3764c43f1e54692b7e84d21ec94772a.html
++ http://tamaszilagyi.com/blog/a-tidy-text-analysis-of-rick-and-morty/
