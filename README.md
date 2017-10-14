@@ -5,4 +5,5 @@
 
 + Verónica García, @yryaa
 + Claudia Guirao, @claudiaguirao
+
 RLadies y Data Scientists en Kernel Analytics
