@@ -1,9 +1,10 @@
 ---
 title: "R-Ladies + Lingwars: Taller de minería de textos con R"
 subtitle: "R-Ladies Madrid, Verónica García y Claudia Guirao, 17/10/2017"
-
 output: 
   html_notebook: 
+    fig_caption: yes
+    fig_width: 8
     toc: yes
 ---
 ## ¿Quiénes somos?
@@ -15,20 +16,35 @@ RLadies y Data Scientists en **Kernel Analytics**
 
 Código y datos en https://github.com/intiveda/rladies_textmining 
 
-## Text Mining
+## Text Mining & NLP
 
-Gran parte de los datos se encuentran no estructurados, es importante conocer técnicas que nos permitan obtener conclusiones a partir de los mensajes que generan nuestras organizaciones, clientes, usuarios o internet en general
+Gran parte de los datos se encuentran no estructurados, es importante conocer técnicas que nos permitan obtener conclusiones a partir de los mensajes que generan nuestras organizaciones, clientes o usuarios. 
+
+Hoy aprenderemos algunas técnicas básicas para manipular cadenas de texto y aplicaremos técnicas de NLP a subtítulos para obtener algunas conclusiones. 
 
 ## Materiales y librerías 
 
-- Subtítulos temporadas de los Simpsons
-- Librerías: ```tm, tidytext, tidyverse, dplyr, datatable, ggplot, igraph, ggraph, worldcloud```
+* Subtítulos temporadas de los Simpsons
+* Librerías:
+ + ```stringr```
+ + ```subtools```
+ + ```tm```
+ + ```tidytext```
+ + ```tidyverse``` 
+ + ```dplyr```
+ + ```datatable```
+ + ```ggplot2```
+ + ```plotly```(opcional)
+ + ```igraph```
+ + ```ggraph```
+ + ```worldcloud```
+ + ```knit```
 
 ## Back2basics: Strings y expresiones regulares
 
 Las cadenas o strings cumplen un papel importante en las tareas de ETL o preparación de los datos. Una de las librerías esenciales en la materia es **string**
 
-String es uno de los paquetes diseñados por Hadley Wickham para asistir en las tareas de manipulación de strings:
+```Stringr``` es uno de los paquetes diseñados por Hadley Wickham para asistir en las tareas de manipulación de strings:
 
 + se integra con _pipes_ (%<%)
 + sus funciones son consistentes y fáciles de interpretar
@@ -133,8 +149,8 @@ rcosas[str_detect(rcosas, pattern = "^R")]
 rcosas[str_detect(rcosas, pattern = "R")]
 ```
 ```{r regex4}
-cleancode <- c("tidyverse", "tidyr","dplyr", "ggplot2", "tidytext", "purrr")
-str_locate(cleancode, "tidy")
+cleanR <- c("tidyverse", "tidyr","dplyr", "ggplot2", "tidytext", "purrr")
+str_locate(cleanR, "tidy")
 ```
 
 ##### Otras funciones 
@@ -165,8 +181,26 @@ print(length(str_split("Eres muy chu chu chuli",pattern = " ")[[1]]))
 
 ## Analizando texto con R: los Simpsons fuente de sabiduría
 
-```{r subtools, message=TRUE, warning=FALSE}
-# devtools::install_github("fkeck/subtools")
+### Leer los subtitutos
+
+La librería `subtools` permite leer archivos `.str` y  `.sub`, así como organizar cada diálogo en un data frame. 
+Los archivos han de estar organizados en directorios por temporadas y cada uno ha de estar nombrado como `S01xE01` para que se parsee correctamente el número de temporada y de episodio.
+
+Nos centraremos en las 9 primeras temporadas de los Simpsons. Si descargamos la puntuación y representamos gráficamente el promedio del score por temporada, se observa un claro descenso a partir de la 10. 
+Por otro lado son las temporadas que mejor conocemos gracias a sus numerosas repeticiones :)
+
+
+```{r, out.width = "150px"}
+knitr::include_graphics("C:/Users/ClaudiaG/Documents/rladies/rladies_repo/rladies_textmining/images/ratings.png",dpi = 100)
+
+```
+
+
+
+A  continuación leemos los subtítulos ( _en inglés_ ) de las 9 primeras temporadas de los Simpsons. 
+
+
+```{r subtools, message=FALSE, warning=FALSE, paged.print=FALSE}
 library(subtools)
 a <- read.subtitles.serie(dir = "C:/Users/ClaudiaG/Documents/rladies/rladies_repo/rladies_textmining/The Simpsons/")
 df <- subDataFrame(a)
@@ -174,9 +208,18 @@ df <- df[complete.cases(df), ]
 str(df)
 ```
 
+### Primer análisis: tm
 
+Una primera opción es emplear la librería `tm` para nuestro análisis. La función `tm_map` nos va a permitir preparar nuestor documento para el análisis:
 
-```{r, , message=FALSE, warning=FALSE}
++ conformar un corpus (conjunto estructurado de textos / documentos )
++ transformar en minúsculas nuestro texto
++ eliminar los signos de puntuación
++ eliminar los números
++ eliminar las _stopwords_ 
++ eliminar los espacios en blanco
+
+```{r cleantm, echo=TRUE, message=TRUE, warning=TRUE}
 library(tm)
 c <- tmCorpus(a)
 c <- tm_map(c, content_transformer(tolower))
@@ -184,26 +227,37 @@ c <- tm_map(c, removePunctuation)
 c <- tm_map(c, removeNumbers)
 c <- tm_map(c, removeWords, stopwords("english"))
 c <- tm_map(c, stripWhitespace)
+c
 ```
 
-```{r, , message=TRUE, warning=FALSE}
-library(data.table)
+El segundo paso, una vez preparado nuestro corpus, será el de construir la matriz de términos documentos. Para simplificar el análisis cada temporada constituirá un documento. 
+De esta forma obtenemos para cada término la frecuencia por temporada. 
+
+```{r, , message=FALSE, warning=FALSE}
 TDM <- TermDocumentMatrix(c)
 TDM <- as.matrix(TDM)
-vec.season <- c(rep(x = 1,13), rep(2, 22), rep(3,24), rep(4,22), rep(5,24), rep(6,25)) #episodios por temp
+vec.season <- c(rep(x = 1,13), rep(2, 22), rep(3,24), rep(4,22), rep(5,24), rep(6,25), rep(7,25),rep(8,25), rep(9,25)) #episodios por temp
 TDM.season <- t(apply(TDM, 1, function(x) tapply(x, vec.season, sum)))
-colnames(TDM.season) <- paste("S", unique(vec.season))
+colnames(TDM.season) <- paste0("S_", unique(vec.season))
+head(TDM.season)
 ```
+
+A continuación representamos en una nube de términos dichas frecuencias: el tamaño indica el número de repeticiones y el color la temporada en la que más repeticiones presenta. La posición del término respecto de la etiqueta de temporada indica también la frecuencia por temporada. 
 
 ```{r, , message=TRUE, warning=FALSE}
 library(wordcloud)
 set.seed(100)
-comparison.cloud(TDM.season, title.size = 1, max.words = 100, random.order = T)
+comparison.cloud(TDM.season, title.size = 1, max.words = 200, random.order = T)
 
 ```
 
+### Text mining con tidytext
 
-```{r, , message=FALSE, warning=FALSE}
+La librería tidytext nos permite realizar operaciones como tf (frecuencia de términos) o tf_idf (frecuencia de término - frecuencia inversa de documento) con mayor agilidad. 
+
+De nuevo vamos a preparar el nuestros diálogos para el análisis eliminado las stopwords.
+
+```{r eliminar stopwords, echo=TRUE, message=FALSE}
 library(tidytext)
 library(tidyverse)
 
@@ -212,11 +266,29 @@ data(stop_words)
 tidy_df <- df %>%
   unnest_tokens(word, Text) %>%
   dplyr::anti_join(stop_words)
-```
-```{r, , message=TRUE, warning=FALSE}
-library(dplyr)
-library(ggplot2)
 
+```
+
+Eliminamos además aquellas "palabras" constituidas exclusivamente por números y la palabra simpson.
+
+```{r warning=FALSE, ,echo=TRUE}
+library(data.table)
+tidy_df <- as.data.table(tidy_df)
+tidy_df <- tidy_df[is.na(as.numeric(word))]
+tidy_df <- tidy_df[word != 'simpson']
+```
+
+
+Con nuestro data set limpio podemos representar en un gráfico de barras la frecuencia de términos. Lo que haremos será:
+
++ agrupar por temporada
++ sumar el número de veces que aparece el término (`count`)
++ tomar el top 10 por temporada
++ representar en un _barplot_ para cada temporada dicha frecuencia
+
+
+```{r plot, fig.width=10, message=TRUE, warning=FALSE}
+library(ggplot2)
 tidy_df %>% group_by(season) %>%
         count(word, sort = TRUE) %>%
         top_n(15) %>%
@@ -228,6 +300,39 @@ tidy_df %>% group_by(season) %>%
         guides(fill = FALSE) +
         scale_fill_brewer(palette = "Set1")
 ```
+
+Ahora que disponemos de la frecuencia podemos analizar la evolución en sus apariciones / tramas de cada personaje:
++ calculamos la frecuencia para todos los términos, no solo el top 15
++ creamos dos listas, la familia Simpson y otros personajes relevantes de la trama
++ representamos ambas series series temporales 
+
+```{r fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+require(plotly)
+tidy_tf <- tidy_df %>% group_by(season) %>%
+        count(word, sort = TRUE)
+tidy_tf <- as.data.table(tidy_tf)
+
+simpson_family <- c('homer', 'bart', 'lisa', 'maggie', 'marge', 'patty','selma')
+other_characters <-  c('moe', 'ned', 'barney', 'modd', 'itchy', 'scratchy', 'krusty', 'burns', 'lenny', 'carl', 'edna', 'nelson', 'apu', 'milhouse', 'ralph', 'skinner', 'bob')
+
+myplot <- ggplot(tidy_tf[tidy_tf$word %in% simpson_family], aes(x=season, y=n, group=word)) +
+  geom_line(aes(color=word), size=1.25)+
+  geom_point(aes(color=word))
+
+ggplotly(myplot)
+
+```
+
+```{r fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+myplot <- ggplot(tidy_tf[tidy_tf$word %in% other_characters], aes(x=season, y=n, group=word)) +
+  geom_line(aes(color=word), size=0.75)+
+  geom_point(aes(color=word))
+ggplotly(myplot)
+```
+
+
+También podemos obtener y representar los bigramas (conjunto de 2 términos) y sus frecuencias. Se representan en forma de grafo los más comunes (aquellos que aparecen al menos 7 veces en una misma temporada)
+
 ```{r, message=FALSE, warning=FALSE}
 library(tidyr)
 library(igraph)
@@ -243,11 +348,10 @@ bigram_graph <- df %>%
   select(word1, word2, season, n) %>%
   filter(n > 7) %>%
   graph_from_data_frame()
-
 # str(bigram_graph)
 ```
 
-```{r, message=TRUE, warning=FALSE}
+```{r fig.height=10, fig.width=10, message=TRUE, warning=FALSE}
 library(ggraph)
 set.seed(2017)
 
@@ -267,6 +371,8 @@ ggraph(bigram_graph, layout = "fr") +
   theme_void()
 ```
 
+También podemos realizar tf_idf sobre nuestro corpus para localizar las palabras más relevantes, en general y por temporada
+
 ```{r}
 library(dplyr)
 tf_idf_df <- tidy_df %>% 
@@ -283,12 +389,12 @@ tf_idf_df %>%
   labs(x = NULL, y = "tf-idf") +
   coord_flip()
 ```
-```{r}
+```{r fig.height=8, fig.width=8,}
 tf_idf_df %>% 
   group_by(season) %>% 
-  top_n(10) %>% 
+  top_n(8) %>% 
   ungroup %>%
-  ggplot(aes(word, tf_idf, fill = season)) +
+  ggplot(aes(reorder(word, tf_idf), tf_idf, fill = season)) +
   geom_col(show.legend = FALSE) +
   labs(x = NULL, y = "tf-idf") +
   facet_wrap(~season, ncol = 2, scales = "free") +
@@ -298,6 +404,8 @@ tf_idf_df %>%
 
 
 ## Anexos y otra információn útil
-+ http://www.pieceofk.fr/?p=437
-+ https://rstudio-pubs-static.s3.amazonaws.com/180610_d3764c43f1e54692b7e84d21ec94772a.html
-+ http://tamaszilagyi.com/blog/a-tidy-text-analysis-of-rick-and-morty/
++ Subtools: http://www.pieceofk.fr/?p=437
++ Stringr and Regex: https://rstudio-pubs-static.s3.amazonaws.com/180610_d3764c43f1e54692b7e84d21ec94772a.html
++ Analisis Rick&Morty: http://tamaszilagyi.com/blog/a-tidy-text-analysis-of-rick-and-morty/
++ Ggplot cheatsheet: https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf
++ Plotly cheatsheet: https://images.plot.ly/plotly-documentation/images/r_cheat_sheet.pdf
