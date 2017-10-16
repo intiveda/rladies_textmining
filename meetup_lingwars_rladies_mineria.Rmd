@@ -66,9 +66,11 @@ c(
   ) %in% rownames(installed.packages())
 ```
 
+***
+
 ## Back2basics: Strings y expresiones regulares
 
-Las cadenas o strings cumplen un papel importante en las tareas de ETL o preparación de los datos. Una de las librerías esenciales en la materia es **string**
+Las cadenas o strings cumplen un papel importante en las tareas de ETL o preparación de los datos. Una de las librerías esenciales en la materia es **string**  
 
 ```Stringr``` es uno de los paquetes diseñados por Hadley Wickham para asistir en las tareas de manipulación de strings:
 
@@ -88,7 +90,7 @@ as.integer(c("a", "&", "123"))
 ```{r list1}
 c(factor("a"), "b", "&",1)
 ```
-Concatenar integers y characters, convierte automáticamente los integers en _characters_. 
+Concatenar integers y characters, convierte automáticamente los integers en _characters_.   
 
 ```{r list2}
 c(as.character(factor("a")), "b", "&",1)
@@ -101,9 +103,10 @@ c(as.character(factor("a")), "b", "&",1)
 # install.packages("stringr")
 library(stringr)
 ```
+
 #### Operadores
 
-Muchas de estas funciones tienne su equivalente en R base, pueden ser más lentas/menos eficientes
+Muchas de estas funciones tienne su equivalente en R base, pueden ser más lentas/menos eficientes.
 
 + `str_to_upper(string)`: convierte un string en mayúsculas
 + `str_to_lower(string)`: convierte un string en minúsculas
@@ -143,13 +146,12 @@ str_sub(string = temas[1:4], start=3)
 str_dup(string = temas[1:4], times = 3)
 ```
 
-+ `str_trim(string, side = c("both", "left", "rigth"))`: elimina los espacios vacíos, por defecto toma el valor _both_. Mejor evitar `gsub(" ", "", string)` 
-
++ `str_trim(string, side = c("both", "left", "rigth"))`: elimina los espacios vacíos, por defecto toma el valor _both_. Mejor evitar `gsub(" ", "", string)`
 + `str_pad(string, width, side = c("left", "both", "right"), pad = " "))`: añade a strings espacios en blanco para igualarlos en longitud, especialmente útil para añadir 0 a números. 
 
 ### Expresiones regulares
 
-Las expresiones regulares ( _regular expressions_, _regex_, _pattern matching_) son un lenguaje usado para parsear y manipular texto. Se usan comúnmente para hacer operaciones de búsqueda y reemplazo y para validar si un texto está bien formado. 
+Las expresiones regulares ( _regular expressions_, _regex_, _pattern matching_) son un lenguaje usado para parsear y manipular texto. Se usan comúnmente para hacer operaciones de búsqueda y reemplazo y para validar si un texto está bien formado.  
 
 ##### Expresiones comunes
 
@@ -159,9 +161,9 @@ Las expresiones regulares ( _regular expressions_, _regex_, _pattern matching_) 
 - "[ ]" = contiene cualquier letra (o número) de las contenidas en los corchetes
 - "[ - ]" = contiene cualquier letra (o número) dentro de un rango
 - "[^ae]" = cualquier cosa excepto determinadas letras (o números)
-- "{3}" = repite la expresión regular 3 veces
+- "{3}" = repite la expresión regular 3 veces  
 
-Las expresiones regulares son un mundo en si mismo, aquí tienes una pequeña _chuleta_ : https://www.rstudio.com/wp-content/uploads/2016/09/RegExCheatsheet.pdf 
+Las expresiones regulares son un mundo en si mismo, aquí tienes una pequeña _chuleta_ : https://www.rstudio.com/wp-content/uploads/2016/09/RegExCheatsheet.pdf   
 
 
 ```{r regex}
@@ -210,11 +212,11 @@ print(length(str_split("Eres muy chu chu chuli",pattern = " ")[[1]]))
 
 ### Leer los subtitutos
 
-La librería `subtools` permite leer archivos `.str` y  `.sub`, así como organizar cada diálogo en un data frame. 
-Los archivos han de estar organizados en directorios por temporadas y cada uno ha de estar nombrado como `S01xE01` para que se parsee correctamente el número de temporada y de episodio.
+La librería `subtools` permite leer archivos `.str` y  `.sub`, así como organizar cada diálogo en un data frame.   
+Los archivos han de estar organizados en directorios por temporadas y cada uno ha de estar nombrado como `S01xE01` para que se parsee correctamente el número de temporada y de episodio.  
 
 Nos centraremos en las 9 primeras temporadas de los Simpsons. Si descargamos la puntuación y representamos gráficamente el promedio del score por temporada, se observa un claro descenso a partir de la 10. 
-Por otro lado son las temporadas que mejor conocemos gracias a sus numerosas repeticiones :)
+Por otro lado son las temporadas que mejor conocemos gracias a sus numerosas repeticiones :)  
 
 
 ```{r, out.width = "150px"}
@@ -224,7 +226,7 @@ knitr::include_graphics("./images/ratings.png",dpi = 100)
 
 
 
-A  continuación leemos los subtítulos ( _en inglés_ ) de las 9 primeras temporadas de los Simpsons. 
+A  continuación leemos los subtítulos ( _en inglés_ ) de las 9 primeras temporadas de los Simpsons.   
 
 
 ```{r subtools, message=FALSE, warning=FALSE, paged.print=FALSE}
@@ -257,8 +259,7 @@ c <- tm_map(c, stripWhitespace)
 c
 ```
 
-El segundo paso, una vez preparado nuestro corpus, será el de construir la matriz de términos documentos. Para simplificar el análisis cada temporada constituirá un documento. 
-De esta forma obtenemos para cada término la frecuencia por temporada. 
+El segundo paso, una vez preparado nuestro corpus, será el de construir la matriz de términos documentos. Para simplificar el análisis cada temporada constituirá un documento. De esta forma obtenemos para cada término la frecuencia por temporada.  
 
 ```{r, , message=FALSE, warning=FALSE}
 TDM <- TermDocumentMatrix(c)
@@ -269,9 +270,9 @@ colnames(TDM.season) <- paste0("S_", unique(vec.season))
 head(TDM.season)
 ```
 
-A continuación representamos en una nube de términos dichas frecuencias: el tamaño indica el número de repeticiones y el color la temporada en la que más repeticiones presenta. La posición del término respecto de la etiqueta de temporada indica también la frecuencia por temporada. 
+A continuación representamos en una nube de términos dichas frecuencias: el tamaño indica el número de repeticiones y el color la temporada en la que más repeticiones presenta. La posición del término respecto de la etiqueta de temporada indica también la frecuencia por temporada.   
 
-```{r, , message=TRUE, warning=FALSE}
+```{r, echo=TRUE, message=TRUE, warning=FALSE}
 library(wordcloud)
 set.seed(100)
 comparison.cloud(TDM.season, title.size = 1, max.words = 200, random.order = T)
@@ -279,8 +280,8 @@ comparison.cloud(TDM.season, title.size = 1, max.words = 200, random.order = T)
 
 ### Text mining con tidytext
 
-La librería tidytext nos permite realizar operaciones como tf (frecuencia de términos) o tf_idf (frecuencia de término - frecuencia inversa de documento) con mayor agilidad. 
-
+La librería tidytext nos permite realizar operaciones como tf (frecuencia de términos) o tf_idf (frecuencia de término - frecuencia inversa de documento) con mayor agilidad.   
+  
 #### Preparar el corpus
 
 De nuevo vamos a preparar el nuestros diálogos para el análisis eliminado las stopwords.
@@ -296,7 +297,7 @@ tidy_df <- df %>%
   dplyr::anti_join(stop_words)
 ```
 
-Eliminamos además aquellas "palabras" constituidas exclusivamente por números y la palabra simpson.
+Eliminamos además aquellas "palabras" constituidas exclusivamente por números y la palabra simpson.  
 
 ```{r  cleaning, warning=FALSE,echo=TRUE}
 library(data.table)
@@ -334,7 +335,7 @@ Ahora que disponemos de la frecuencia podemos analizar la evolución en sus apari
 + creamos dos listas, la familia Simpson y otros personajes relevantes de la trama
 + representamos ambas series series temporales 
 
-```{r fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
 #install.packages('plotly')
 require(plotly)
 tidy_tf <- tidy_df %>% group_by(season) %>%
@@ -352,7 +353,7 @@ ggplotly(myplot)
 
 ```
 
-```{r fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+```{r ,echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
 myplot <- ggplot(tidy_tf[tidy_tf$word %in% other_characters], aes(x=season, y=n, group=word)) +
   geom_line(aes(color=word), size=0.75)+
   geom_point(aes(color=word))
@@ -363,7 +364,7 @@ ggplotly(myplot)
 
 También podemos obtener y representar los bigramas (conjunto de 2 términos) y sus frecuencias. Se representan en forma de grafo los más comunes (aquellos que aparecen al menos 7 veces en una misma temporada)
 
-```{r, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 library(tidyr)
 library(igraph)
 library(tidytext)
@@ -381,7 +382,7 @@ bigram_graph <- df %>%
 # str(bigram_graph)
 ```
 
-```{r fig.height=10, fig.width=10, message=TRUE, warning=FALSE}
+```{r, echo=TRUE, fig.height=10, fig.width=10, message=TRUE, warning=FALSE}
 library(ggraph)
 set.seed(2017)
 
@@ -390,7 +391,7 @@ ggraph(bigram_graph, layout = "fr") +
   geom_node_point() +
   geom_node_text(aes(label = name), vjust = 1, hjust = 1)
 ```
-```{r}
+```{r, echo=TRUE, fig.height=10, fig.width=10, message=TRUE, warning=FALSE}
 a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
 
 ggraph(bigram_graph, layout = "fr") +
@@ -405,7 +406,7 @@ ggraph(bigram_graph, layout = "fr") +
 
 También podemos realizar tf_idf sobre nuestro corpus para localizar las palabras más relevantes, en general y por temporada
 
-```{r tf_idf}
+```{r tf_idf, , echo=TRUE, fig.height=10, fig.width=10, message=TRUE, warning=FALSE}
 library(dplyr)
 tf_idf_df <- tidy_df %>% 
         count(season, word, sort = TRUE) %>%
@@ -413,7 +414,7 @@ tf_idf_df <- tidy_df %>%
 tf_idf_df <- tf_idf_df[order(-tf_idf_df$tf_idf),] 
 ```
 
-```{r tf_idf2}
+```{r tf_idf2, echo=TRUE, fig.height=10, fig.width=10, message=TRUE, warning=FALSE}
 tf_idf_df %>% 
   top_n(20) %>%
   ggplot(aes(word, tf_idf, fill = season)) +
@@ -421,7 +422,7 @@ tf_idf_df %>%
   labs(x = NULL, y = "tf-idf") +
   coord_flip()
 ```
-```{r byseason, fig.height=8, fig.width=8,}
+```{r byseason, fig.height=8, fig.width=8,echo=TRUE}
 tf_idf_df %>% 
   group_by(season) %>% 
   top_n(8) %>% 
@@ -457,11 +458,11 @@ head(get_sentiments("bing"), 3)
 head(get_sentiments("nrc"), 3)
 ```
 
-```{r, echo=TRUE}
+```{r seasonpaste, echo=TRUE}
 tidy_df[, season_episode := paste0('S', season_num,"XE", str_pad(episode_num,width = 2,pad = "0"))]
 ```
 
-```{r, echo=TRUE}
+```{r bing, echo=TRUE}
 library(tidyr)
 
 simpson_sentiment <- tidy_df %>%
@@ -472,7 +473,7 @@ simpson_sentiment <- tidy_df %>%
 
 head(simpson_sentiment,3)
 ```
-```{r ,fig.height=12, echo=TRUE, fig.width=12}
+```{r sent ,fig.height=12, echo=TRUE, fig.width=12}
 simpson_sentiment <- as.data.table(simpson_sentiment)
 simpson_sentiment[, season:= str_sub(season_episode,start = 1, end = 2)]
 simpson_sentiment[, season:= str_replace(season, "S", "Season ")]
@@ -482,7 +483,7 @@ ggplot(simpson_sentiment, aes(episode, sentiment, fill = season)) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~season, ncol = 2, scales = "free_x")
 ```
-```{r, echo=TRUE, fig.height=12, fig.width=12}
+```{r afinn, echo=TRUE, fig.height=12, fig.width=12}
 afinn <- tidy_df %>% 
   inner_join(get_sentiments("afinn")) %>% 
   group_by(season_episode) %>% 
@@ -500,7 +501,9 @@ ggplot(afinn, aes(episode, sentiment, fill = season)) +
 
 ```
 
-```{r, echo=TRUE}
+
+
+```{r comparativa, echo=TRUE}
 
 resplandior <- tidy_df[season_num==6 & episode_num==6]
 afinn_r <- resplandior %>% 
@@ -541,3 +544,8 @@ ggplot(data=comparativa, aes(x=method, y=sentiment)) +
 + Plotly cheatsheet: https://images.plot.ly/plotly-documentation/images/r_cheat_sheet.pdf
 + Curso text mining Data camp: https://www.datacamp.com/courses/intro-to-text-mining-bag-of-words
 + Subtools: http://www.pieceofk.fr/?p=437
+
+```{r thankyou, echo=FALSE, out.width="150px"}
+knitr::include_graphics("./images/thanks_homer.jpg",dpi = 100)
+```
+_Si estás leyendo esto en diferido y tienes preguntas no dudes en localizarnos en Twitter_
