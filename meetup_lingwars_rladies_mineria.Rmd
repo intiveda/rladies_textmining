@@ -38,7 +38,33 @@ Hoy aprenderemos algunas técnicas básicas para manipular cadenas de texto y apli
  + ```igraph```
  + ```ggraph```
  + ```worldcloud```
- + ```knit```
+
+Puedes seguir este tutorial de dos formas:
+
+1. Escuchando activamente, para probar luego en casa :)
+2. De forma activa, ejecutando en tu equipo:
+* Descarga el notebook del repositorio. 
+* Abre el archivo ```.Rmd``` en R Studio (para poder ejecutar notebooks necesitarás algunas dependencias)
+* Fija el __working directory__ dentro de la carpeta ```rladies_textmining```: ```setwd("eldirectoriodondehasdescargadoelrepo/rladies_textmining/")```
+* Chequea que tienes las librerías instaladas. No te apures si worldcloud o knit, aparecen como no instaladas, es posible que no estén disponibles para tu versión R 
+
+```{r, echo=TRUE, warning=TRUE}
+c(
+  "stringr",
+  "subtools",
+  "tm",
+  "tidytext",
+  "tidyverse",
+  "dplyr",
+  "data.table",
+  "ggplot2",
+  "plotly",
+  "igraph",
+  "ggraph",
+  "worldcloud",
+  "knit"
+  ) %in% rownames(installed.packages())
+```
 
 ## Back2basics: Strings y expresiones regulares
 
@@ -53,7 +79,7 @@ Las cadenas o strings cumplen un papel importante en las tareas de ETL o prepara
 
 + Las cadenas de texto se encuentran contenidas entre comillas `""` (*usar la comilla simple `'` para escapar la doble comilla)
 + Pueden contener letras `"a"`, números `"1"`, simbolos `"&"` o todo lo anterior `"1a&"`
-+ Mientras que los números puede ser a la vez _integers_ y _characters_, las letras y los s?mbolos no tienen significado como integer y se traducen en `NA`
++ Mientras que los números puede ser a la vez _integers_ y _characters_, las letras y los símbolos no tienen significado como integer y se traducen en `NA`
 
 ```{r as.integer, warning=FALSE}
 as.integer(c("a", "&", "123"))
@@ -71,7 +97,7 @@ c(as.character(factor("a")), "b", "&",1)
 ### Operaciones básicas
 
 #### Importar la librería
-```{r}
+```{r imports, warning=FALSE}
 # install.packages("stringr")
 library(stringr)
 ```
@@ -87,6 +113,7 @@ Muchas de estas funciones tienne su equivalente en R base, pueden ser más lentas
 ```{r temas}
 temas <- c("Código", "Mujeres", "tecnología", "Informática", "estadística", "Women", "Coders", "Aprendizaje", "automático", "Análisis", "datos", "Visualización", "R-Ladies", "Social", "Coding", "R", "Ciencia", "Programming")
 ```
+
 ```{r mayus}
 str_to_upper(temas)
 ```
@@ -191,7 +218,7 @@ Por otro lado son las temporadas que mejor conocemos gracias a sus numerosas rep
 
 
 ```{r, out.width = "150px"}
-knitr::include_graphics("C:/Users/ClaudiaG/Documents/rladies/rladies_repo/rladies_textmining/images/ratings.png",dpi = 100)
+knitr::include_graphics("./images/ratings.png",dpi = 100)
 
 ```
 
@@ -202,7 +229,7 @@ A  continuación leemos los subtítulos ( _en inglés_ ) de las 9 primeras temporad
 
 ```{r subtools, message=FALSE, warning=FALSE, paged.print=FALSE}
 library(subtools)
-a <- read.subtitles.serie(dir = "C:/Users/ClaudiaG/Documents/rladies/rladies_repo/rladies_textmining/The Simpsons/")
+a <- read.subtitles.serie(dir = "./The Simpsons/")
 df <- subDataFrame(a)
 df <- df[complete.cases(df), ]
 str(df)
@@ -219,7 +246,7 @@ Una primera opción es emplear la librería `tm` para nuestro análisis. La función
 + eliminar las _stopwords_ 
 + eliminar los espacios en blanco
 
-```{r cleantm, echo=TRUE, message=TRUE, warning=TRUE}
+```{r cleantm, echo=TRUE, message=TRUE, warning=FALSE}
 library(tm)
 c <- tmCorpus(a)
 c <- tm_map(c, content_transformer(tolower))
@@ -248,16 +275,17 @@ A continuación representamos en una nube de términos dichas frecuencias: el tama
 library(wordcloud)
 set.seed(100)
 comparison.cloud(TDM.season, title.size = 1, max.words = 200, random.order = T)
-
 ```
 
 ### Text mining con tidytext
 
 La librería tidytext nos permite realizar operaciones como tf (frecuencia de términos) o tf_idf (frecuencia de término - frecuencia inversa de documento) con mayor agilidad. 
 
+#### Preparar el corpus
+
 De nuevo vamos a preparar el nuestros diálogos para el análisis eliminado las stopwords.
 
-```{r eliminar stopwords, echo=TRUE, message=FALSE}
+```{r eliminar stopwords, echo=TRUE, message=FALSE, warning=TRUE}
 library(tidytext)
 library(tidyverse)
 
@@ -266,18 +294,18 @@ data(stop_words)
 tidy_df <- df %>%
   unnest_tokens(word, Text) %>%
   dplyr::anti_join(stop_words)
-
 ```
 
 Eliminamos además aquellas "palabras" constituidas exclusivamente por números y la palabra simpson.
 
-```{r warning=FALSE, ,echo=TRUE}
+```{r  cleaning, warning=FALSE,echo=TRUE}
 library(data.table)
 tidy_df <- as.data.table(tidy_df)
 tidy_df <- tidy_df[is.na(as.numeric(word))]
 tidy_df <- tidy_df[word != 'simpson']
 ```
 
+#### Term frequency
 
 Con nuestro data set limpio podemos representar en un gráfico de barras la frecuencia de términos. Lo que haremos será:
 
@@ -290,7 +318,7 @@ Con nuestro data set limpio podemos representar en un gráfico de barras la frecu
 ```{r plot, fig.width=10, message=TRUE, warning=FALSE}
 library(ggplot2)
 tidy_df %>% group_by(season) %>%
-        count(word, sort = TRUE) %>%
+        count(word, sort = FALSE) %>%
         top_n(15) %>%
         ggplot(aes(reorder(word,n), n, fill = season)) +
         geom_col() +
@@ -307,6 +335,7 @@ Ahora que disponemos de la frecuencia podemos analizar la evolución en sus apari
 + representamos ambas series series temporales 
 
 ```{r fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+#install.packages('plotly')
 require(plotly)
 tidy_tf <- tidy_df %>% group_by(season) %>%
         count(word, sort = TRUE)
@@ -330,6 +359,7 @@ myplot <- ggplot(tidy_tf[tidy_tf$word %in% other_characters], aes(x=season, y=n,
 ggplotly(myplot)
 ```
 
+#### Bigramas
 
 También podemos obtener y representar los bigramas (conjunto de 2 términos) y sus frecuencias. Se representan en forma de grafo los más comunes (aquellos que aparecen al menos 7 veces en una misma temporada)
 
@@ -371,9 +401,11 @@ ggraph(bigram_graph, layout = "fr") +
   theme_void()
 ```
 
+####
+
 También podemos realizar tf_idf sobre nuestro corpus para localizar las palabras más relevantes, en general y por temporada
 
-```{r}
+```{r tf_idf}
 library(dplyr)
 tf_idf_df <- tidy_df %>% 
         count(season, word, sort = TRUE) %>%
@@ -381,7 +413,7 @@ tf_idf_df <- tidy_df %>%
 tf_idf_df <- tf_idf_df[order(-tf_idf_df$tf_idf),] 
 ```
 
-```{r}
+```{r tf_idf2}
 tf_idf_df %>% 
   top_n(20) %>%
   ggplot(aes(word, tf_idf, fill = season)) +
@@ -389,7 +421,7 @@ tf_idf_df %>%
   labs(x = NULL, y = "tf-idf") +
   coord_flip()
 ```
-```{r fig.height=8, fig.width=8,}
+```{r byseason, fig.height=8, fig.width=8,}
 tf_idf_df %>% 
   group_by(season) %>% 
   top_n(8) %>% 
@@ -401,11 +433,111 @@ tf_idf_df %>%
   coord_flip()
 ```
 
+#### Análisis de sentimiento
+
+Valorar como positivo o negativo un mensaje es una tarea compleja, que requiere no sólo conocer el __significado__ de las palabras sino también contextualizarlas, conocer la entonación en que se produce el mensaje, etc. 
+
+En este caso vamos a realizar una aproximación mucho más simple, que es la de considerar el texto como la combinación de palabras individuales y el sentimiento como la suma del sentimiento asociado a cada una de las palabras. Para ello ```tidytext```nos ofrece tres posibles datasets (lexicon) de sentimientos:
++ AFINN from Finn Årup Nielsen (-5, 5),
++ bing from Bing Liu and collaborators("positive" / "negative")
++ nrc from Saif Mohammad and Peter Turney ("yes" / "no").
+
+Todos ellos basados en unigramas. 
 
 
-## Anexos y otra információn útil
-+ Subtools: http://www.pieceofk.fr/?p=437
+
+```{r sentiment_analysis, echo=TRUE}
+head(get_sentiments("afinn"), 3)
+```
+
+```{r, echo=TRUE}
+head(get_sentiments("bing"), 3)
+```
+```{r, echo=TRUE}
+head(get_sentiments("nrc"), 3)
+```
+
+```{r, echo=TRUE}
+tidy_df[, season_episode := paste0('S', season_num,"XE", str_pad(episode_num,width = 2,pad = "0"))]
+```
+
+```{r, echo=TRUE}
+library(tidyr)
+
+simpson_sentiment <- tidy_df %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(season_episode, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+head(simpson_sentiment,3)
+```
+```{r ,fig.height=12, echo=TRUE, fig.width=12}
+simpson_sentiment <- as.data.table(simpson_sentiment)
+simpson_sentiment[, season:= str_sub(season_episode,start = 1, end = 2)]
+simpson_sentiment[, season:= str_replace(season, "S", "Season ")]
+simpson_sentiment[, episode:= str_sub(season_episode,start = 4, end = 6)]
+
+ggplot(simpson_sentiment, aes(episode, sentiment, fill = season)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~season, ncol = 2, scales = "free_x")
+```
+```{r, echo=TRUE, fig.height=12, fig.width=12}
+afinn <- tidy_df %>% 
+  inner_join(get_sentiments("afinn")) %>% 
+  group_by(season_episode) %>% 
+  summarise(sentiment = sum(score)) %>% 
+  mutate(method = "AFINN")
+
+afinn <- as.data.table(afinn)
+afinn[, season:= str_sub(season_episode,start = 1, end = 2)]
+afinn[, season:= str_replace(season, "S", "Season ")]
+afinn[, episode:= str_sub(season_episode,start = 4, end = 6)]
+
+ggplot(afinn, aes(episode, sentiment, fill = season)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~season, ncol = 2, scales = "free_x")
+
+```
+
+```{r, echo=TRUE}
+
+resplandior <- tidy_df[season_num==6 & episode_num==6]
+afinn_r <- resplandior %>% 
+  inner_join(get_sentiments("afinn")) %>% 
+  group_by(season_episode) %>% 
+  summarise(sentiment = sum(score)) %>% 
+  mutate(method = "AFINN") %>% data.table()
+
+bing_and_nrc_r <- bind_rows(resplandior %>% 
+                            inner_join(get_sentiments("bing")) %>%
+                            mutate(method = "Bing et al."),
+                          resplandior %>% 
+                            inner_join(get_sentiments("nrc") %>% 
+                                         filter(sentiment %in% c("positive", 
+                                                                 "negative"))) %>%
+                            mutate(method = "NRC")) %>%
+  count(method,  sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)  %>% data.table()
+
+comparativa <- rbind(afinn_r[, c("sentiment", "method"), with = F], bing_and_nrc_r[, c("sentiment", "method"), with = F])
+
+
+ggplot(data=comparativa, aes(x=method, y=sentiment)) +
+  geom_bar(stat="identity",fill="steelblue")+
+  theme_minimal()
+
+```
+
+
+
+## Anexos y otra información útil
+
++ Tidy text: http://tidytextmining.com
 + Stringr and Regex: https://rstudio-pubs-static.s3.amazonaws.com/180610_d3764c43f1e54692b7e84d21ec94772a.html
 + Analisis Rick&Morty: http://tamaszilagyi.com/blog/a-tidy-text-analysis-of-rick-and-morty/
 + Ggplot cheatsheet: https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf
 + Plotly cheatsheet: https://images.plot.ly/plotly-documentation/images/r_cheat_sheet.pdf
++ Curso text mining Data camp: https://www.datacamp.com/courses/intro-to-text-mining-bag-of-words
++ Subtools: http://www.pieceofk.fr/?p=437
