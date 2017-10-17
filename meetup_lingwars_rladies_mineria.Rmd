@@ -38,6 +38,8 @@ Hoy aprenderemos algunas técnicas básicas para manipular cadenas de texto y apli
  + ```igraph```
  + ```ggraph```
  + ```worldcloud```
+ + ```knitr```
+ + ```wordcloud```
 
 Puedes seguir este tutorial de dos formas:
 
@@ -61,8 +63,8 @@ c(
   "plotly",
   "igraph",
   "ggraph",
-  "worldcloud",
-  "knit"
+  "wordcloud",
+  "knitr"
   ) %in% rownames(installed.packages())
 ```
 
@@ -70,7 +72,7 @@ c(
 
 ## Back2basics: Strings y expresiones regulares
 
-Las cadenas o strings cumplen un papel importante en las tareas de ETL o preparación de los datos. Una de las librerías esenciales en la materia es **string**  
+Las cadenas o strings cumplen un papel importante en las tareas de ETL o preparación de los datos. Una de las librerías esenciales en la materia es **stringr**  
 
 ```Stringr``` es uno de los paquetes diseñados por Hadley Wickham para asistir en las tareas de manipulación de strings:
 
@@ -80,7 +82,7 @@ Las cadenas o strings cumplen un papel importante en las tareas de ETL o prepara
 ### ¿Qué son las cadenas de texto o _strings_?
 
 + Las cadenas de texto se encuentran contenidas entre comillas `""` (*usar la comilla simple `'` para escapar la doble comilla)
-+ Pueden contener letras `"a"`, números `"1"`, simbolos `"&"` o todo lo anterior `"1a&"`
++ Pueden contener letras `"a"`, números `"1"`, símbolos `"&"` o todo lo anterior `"1a&"`
 + Mientras que los números puede ser a la vez _integers_ y _characters_, las letras y los símbolos no tienen significado como integer y se traducen en `NA`
 
 ```{r as.integer, warning=FALSE}
@@ -106,7 +108,7 @@ library(stringr)
 
 #### Operadores
 
-Muchas de estas funciones tienne su equivalente en R base, pueden ser más lentas/menos eficientes.
+Muchas de estas funciones tiene su equivalente en R base, pueden ser más lentas/menos eficientes.
 
 + `str_to_upper(string)`: convierte un string en mayúsculas
 + `str_to_lower(string)`: convierte un string en minúsculas
@@ -264,7 +266,7 @@ El segundo paso, una vez preparado nuestro corpus, será el de construir la matri
 ```{r, , message=FALSE, warning=FALSE}
 TDM <- TermDocumentMatrix(c)
 TDM <- as.matrix(TDM)
-vec.season <- c(rep(x = 1,13), rep(2, 22), rep(3,24), rep(4,22), rep(5,24), rep(6,25), rep(7,25),rep(8,25), rep(9,25)) #episodios por temp
+vec.season <- c(rep(x = 1,13), rep(2, 22), rep(3,24), rep(4,22), rep(5,22), rep(6,25), rep(7,25),rep(8,25), rep(9,25)) #episodios por temp
 TDM.season <- t(apply(TDM, 1, function(x) tapply(x, vec.season, sum)))
 colnames(TDM.season) <- paste0("S_", unique(vec.season))
 head(TDM.season)
@@ -473,7 +475,7 @@ simpson_sentiment <- tidy_df %>%
 
 head(simpson_sentiment,3)
 ```
-```{r sent ,fig.height=12, echo=TRUE, fig.width=12}
+```{r sent, echo=TRUE, fig.height=12, fig.width=12}
 simpson_sentiment <- as.data.table(simpson_sentiment)
 simpson_sentiment[, season:= str_sub(season_episode,start = 1, end = 2)]
 simpson_sentiment[, season:= str_replace(season, "S", "Season ")]
