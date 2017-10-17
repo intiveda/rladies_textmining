@@ -48,7 +48,7 @@ Puedes seguir este tutorial de dos formas:
 * Descarga el notebook del repositorio. 
 * Abre el archivo ```.Rmd``` en R Studio (para poder ejecutar notebooks necesitarás algunas dependencias)
 * Fija el __working directory__ dentro de la carpeta ```rladies_textmining```: ```setwd("eldirectoriodondehasdescargadoelrepo/rladies_textmining/")```
-* Chequea que tienes las librerías instaladas. No te apures si worldcloud o knit, aparecen como no instaladas, es posible que no estén disponibles para tu versión R 
+* Chequea que tienes las librerías instaladas. 
 
 ```{r, echo=TRUE, warning=TRUE}
 c(
@@ -232,6 +232,8 @@ A  continuación leemos los subtítulos ( _en inglés_ ) de las 9 primeras temporad
 
 
 ```{r subtools, message=FALSE, warning=FALSE, paged.print=FALSE}
+#devtools::install_github("fkeck/subtools")
+
 library(subtools)
 a <- read.subtitles.serie(dir = "./The Simpsons/")
 df <- subDataFrame(a)
